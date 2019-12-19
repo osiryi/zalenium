@@ -77,9 +77,11 @@ WaitSeleniumHub()
 {
     # Other option is to wait for certain text at
     #  logs/stdout.zalenium.hub.log
-    while ! curl -sSL "http://localhost:4444${CONTEXT_PATH}/wd/hub/status" 2>&1 \
-            | jq -r '.status' 2>&1 | grep "0" >/dev/null; do
-        echo -n '.'
+    while ! curl --noproxy "*" "http://localhost:4444${CONTEXT_PATH}/wd/hub/status" \
+            | jq -r '.status' | grep "0" >/dev/null ; do
+        printf '\n'
+#        curl --noproxy "*" "http://localhost:4444${CONTEXT_PATH}/wd/hub/status" | jq -r '.status' | grep "0"
+        printf '\n'
         sleep 0.2
     done
 }
@@ -364,8 +366,8 @@ StartUp()
             exit 5
         fi
     fi
-    
-    
+
+
     if [ "$CBT_ENABLED" = true ]; then
         CBT_USERNAME="${CBT_USERNAME:=abc}"
         CBT_AUTHKEY="${CBT_AUTHKEY:=abc}"
@@ -380,7 +382,7 @@ StartUp()
             exit 5
         fi
     fi
-    
+
     export ZALENIUM_DESIRED_CONTAINERS=${DESIRED_CONTAINERS}
     export ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS=${MAX_DOCKER_SELENIUM_CONTAINERS}
     export ZALENIUM_VIDEO_RECORDING_ENABLED=${VIDEO_RECORDING_ENABLED}
@@ -477,7 +479,7 @@ StartUp()
     ${DEBUG_FLAG} &
 
     echo $! > ${PID_PATH_SELENIUM}
-    
+
     if ! timeout --foreground "1m" bash -c WaitSeleniumHub; then
         echo "GridLauncher failed to start after 1 minute, failing..."
         curl "http://localhost:4444${CONTEXT_PATH}/wd/hub/status"
@@ -485,7 +487,7 @@ StartUp()
     fi
     echo "Selenium Hub started!"
 
-    if ! curl -sSL "http://localhost:4444${CONTEXT_PATH}" | grep Grid >/dev/null; then
+    if ! curl --noproxy "*" "http://localhost:4444${CONTEXT_PATH}" | grep Grid >/dev/null; then
         echo "Error: The Grid is not listening at port 4444"
         exit 7
     fi
@@ -574,7 +576,7 @@ StartUp()
     else
         echo "TestingBot not enabled..."
     fi
-    
+
     if [ "$CBT_ENABLED" = true ]; then
         echo "Starting CBT node..."
         java -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
@@ -602,7 +604,7 @@ StartUp()
     else
         echo "CBT not enabled..."
     fi
-    
+
     echo "Zalenium is now ready!"
 
     if [ "$SEND_ANONYMOUS_USAGE_INFO" = true ]; then
@@ -715,7 +717,7 @@ ShutDown()
             rm ${PID_PATH_TESTINGBOT_NODE}
         fi
     fi
-    
+
     if [ -f ${PID_PATH_CBT_NODE} ];
     then
         echo "Stopping CBT node..."
@@ -728,7 +730,7 @@ ShutDown()
             rm ${PID_PATH_CBT_NODE}
         fi
     fi
-    
+
     if [ -f ${PID_PATH_SAUCE_LABS_TUNNEL} ];
     then
         echo "Stopping Sauce Connect..."
@@ -770,7 +772,7 @@ ShutDown()
             rm ${PID_PATH_TESTINGBOT_TUNNEL}
         fi
     fi
-    
+
     if [ -f ${PID_PATH_CBT_TUNNEL} ];
     then
         echo "Stopping CBT tunnel..."
@@ -784,7 +786,7 @@ ShutDown()
             rm ${PID_PATH_CBT_TUNNEL}
         fi
     fi
-    
+
     if [ -f /home/seluser/videos/executedTestsInfo.json ]; then
         # Wait for the dashboard and the videos, if applies
         if timeout --foreground "40s" bash -c WaitForVideosTransferred; then

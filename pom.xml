@@ -192,7 +192,7 @@
             </exclusion>
           </exclusions>
         </dependency>
-        <!-- 
+        <!--
         This allows us to add prometheus jetty collectors that expect to find jetty classes in their usual place.
         Selenium has repackaged Jetty, so this makes it available at compile time, before we relocate the classes again.
          -->
